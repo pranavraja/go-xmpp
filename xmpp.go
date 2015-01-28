@@ -30,6 +30,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -510,6 +511,7 @@ func (c *Client) IsEncrypted() bool {
 
 // Chat is an incoming or outgoing XMPP chat message.
 type Chat struct {
+	Time   time.Time
 	Remote string
 	Type   string
 	Text   string
@@ -534,7 +536,7 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 		}
 		switch v := val.(type) {
 		case *clientMessage:
-			return Chat{v.From, v.Type, v.Body, v.Other}, nil
+			return Chat{v.Time.Stamp, v.From, v.Type, v.Body, v.Other}, nil
 		case *clientPresence:
 			return Presence{v.From, v.To, v.Type, v.Show}, nil
 		}
@@ -630,10 +632,13 @@ type bindBind struct {
 // RFC 3921  B.1  jabber:client
 type clientMessage struct {
 	XMLName xml.Name `xml:"jabber:client message"`
-	From    string   `xml:"from,attr"`
-	ID      string   `xml:"id,attr"`
-	To      string   `xml:"to,attr"`
-	Type    string   `xml:"type,attr"` // chat, error, groupchat, headline, or normal
+	Time    struct {
+		Stamp time.Time `xml:"stamp,attr"`
+	} `xml:"delay"`
+	From string `xml:"from,attr"`
+	ID   string `xml:"id,attr"`
+	To   string `xml:"to,attr"`
+	Type string `xml:"type,attr"` // chat, error, groupchat, headline, or normal
 
 	// These should technically be []clientText, but string is much more convenient.
 	Subject string `xml:"subject"`
