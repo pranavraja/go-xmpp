@@ -520,6 +520,7 @@ type Chat struct {
 
 // Presence is an XMPP presence notification.
 type Presence struct {
+	JID  string
 	From string
 	To   string
 	Type string
@@ -538,7 +539,7 @@ func (c *Client) Recv() (stanza interface{}, err error) {
 		case *clientMessage:
 			return Chat{v.Time.Stamp, v.From, v.Type, v.Body, v.Other}, nil
 		case *clientPresence:
-			return Presence{v.From, v.To, v.Type, v.Show}, nil
+			return Presence{v.Item.JID, v.From, v.To, v.Type, v.Show}, nil
 		}
 	}
 	panic("unreachable")
@@ -656,11 +657,15 @@ type clientText struct {
 
 type clientPresence struct {
 	XMLName xml.Name `xml:"jabber:client presence"`
-	From    string   `xml:"from,attr"`
-	ID      string   `xml:"id,attr"`
-	To      string   `xml:"to,attr"`
-	Type    string   `xml:"type,attr"` // error, probe, subscribe, subscribed, unavailable, unsubscribe, unsubscribed
-	Lang    string   `xml:"lang,attr"`
+	Item    struct {
+		JID string `xml:"jid,attr"`
+	} `xml:"x>item"`
+
+	From string `xml:"from,attr"`
+	ID   string `xml:"id,attr"`
+	To   string `xml:"to,attr"`
+	Type string `xml:"type,attr"` // error, probe, subscribe, subscribed, unavailable, unsubscribe, unsubscribed
+	Lang string `xml:"lang,attr"`
 
 	Show     string `xml:"show"`        // away, chat, dnd, xa
 	Status   string `xml:"status,attr"` // sb []clientText
